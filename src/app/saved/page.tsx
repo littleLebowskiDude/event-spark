@@ -2,18 +2,18 @@
 
 import { useState, useEffect, useReducer } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import SwipeStack from '@/components/SwipeStack';
-import EventDetail from '@/components/EventDetail';
 import BottomNav from '@/components/BottomNav';
-import { SwipeStackSkeleton } from '@/components/EventCardSkeleton';
+import SavedEventsList from '@/components/SavedEventsList';
+import EventDetail from '@/components/EventDetail';
 import { Event } from '@/lib/types';
-import { getEvents } from '@/lib/supabase';
-import { Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { getEventsByIds } from '@/lib/supabase';
+import { getSavedEventIds } from '@/lib/storage';
+import { Sparkles, Loader2, AlertCircle, RefreshCw, Heart } from 'lucide-react';
 
 type LoadingState = 'loading' | 'success' | 'error';
 
 type State = {
-  events: Event[];
+  savedEvents: Event[];
   loadingState: LoadingState;
   errorMessage: string;
 };
@@ -21,22 +21,25 @@ type State = {
 type Action =
   | { type: 'LOADING' }
   | { type: 'SUCCESS'; events: Event[] }
-  | { type: 'ERROR'; message: string };
+  | { type: 'ERROR'; message: string }
+  | { type: 'REMOVE_EVENT'; eventId: string };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'LOADING':
       return { ...state, loadingState: 'loading', errorMessage: '' };
     case 'SUCCESS':
-      return { events: action.events, loadingState: 'success', errorMessage: '' };
+      return { savedEvents: action.events, loadingState: 'success', errorMessage: '' };
     case 'ERROR':
       return { ...state, loadingState: 'error', errorMessage: action.message };
+    case 'REMOVE_EVENT':
+      return { ...state, savedEvents: state.savedEvents.filter(e => e.id !== action.eventId) };
   }
 }
 
-export default function Home() {
+export default function SavedPage() {
   const [state, dispatch] = useReducer(reducer, {
-    events: [],
+    savedEvents: [],
     loadingState: 'loading',
     errorMessage: '',
   });
@@ -46,20 +49,34 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchEvents() {
+    async function loadSavedEvents() {
       dispatch({ type: 'LOADING' });
-      const result = await getEvents();
+
+      // Get saved event IDs from local storage
+      const savedIds = getSavedEventIds();
+
+      if (savedIds.length === 0) {
+        dispatch({ type: 'SUCCESS', events: [] });
+        return;
+      }
+
+      // Fetch events from Supabase by their IDs
+      const result = await getEventsByIds(savedIds);
 
       if (cancelled) return;
 
       if (result.success) {
-        dispatch({ type: 'SUCCESS', events: result.data });
+        // Sort by date
+        const events = result.data.sort(
+          (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+        );
+        dispatch({ type: 'SUCCESS', events });
       } else {
         dispatch({ type: 'ERROR', message: result.error.message });
       }
     }
 
-    fetchEvents();
+    loadSavedEvents();
 
     return () => {
       cancelled = true;
@@ -76,30 +93,30 @@ export default function Home() {
 
   const handleCloseDetail = () => {
     setSelectedEvent(null);
+    // Reload saved events in case something changed
+    handleRetry();
   };
 
-  const handleSave = () => {
-    // Event was saved, close detail view
-    setSelectedEvent(null);
-  };
-
-  const handlePass = () => {
-    // Event was passed, close detail view
-    setSelectedEvent(null);
+  const handleRemove = (eventId: string) => {
+    dispatch({ type: 'REMOVE_EVENT', eventId });
   };
 
   const renderContent = () => {
     switch (state.loadingState) {
       case 'loading':
-        return <SwipeStackSkeleton />;
+        return (
+          <div className="flex items-center justify-center h-[60vh]">
+            <Loader2 className="w-8 h-8 text-accent animate-spin" />
+          </div>
+        );
 
       case 'error':
         return (
-          <div className="flex flex-col items-center justify-center h-full px-8 text-center">
+          <div className="flex flex-col items-center justify-center h-[60vh] px-8 text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-            <h2 className="text-lg font-semibold mb-2">Unable to Load Events</h2>
+            <h2 className="text-lg font-semibold mb-2">Unable to Load Saved Events</h2>
             <p className="text-sm text-muted mb-6 max-w-sm">
-              {state.errorMessage || 'Something went wrong while loading events. Please try again.'}
+              {state.errorMessage || 'Something went wrong while loading your saved events. Please try again.'}
             </p>
             <button
               onClick={handleRetry}
@@ -112,22 +129,22 @@ export default function Home() {
         );
 
       case 'success':
-        if (state.events.length === 0) {
+        if (state.savedEvents.length === 0) {
           return (
-            <div className="flex flex-col items-center justify-center h-full px-8 text-center">
-              <Sparkles className="w-12 h-12 text-muted mb-4" />
-              <h2 className="text-lg font-semibold mb-2">No Events Found</h2>
+            <div className="flex flex-col items-center justify-center h-[60vh] px-8 text-center">
+              <Heart className="w-12 h-12 text-muted mb-4" />
+              <h2 className="text-lg font-semibold mb-2">No Saved Events</h2>
               <p className="text-sm text-muted max-w-sm">
-                There are no upcoming events at the moment. Check back later for new events in Beechworth.
+                Events you save will appear here. Swipe right or tap the heart button to save events you are interested in.
               </p>
             </div>
           );
         }
         return (
-          <SwipeStack
-            events={state.events}
+          <SavedEventsList
+            events={state.savedEvents}
             onEventTap={handleEventTap}
-            onEmpty={() => console.log('No more events')}
+            onRemove={handleRemove}
           />
         );
     }
@@ -139,17 +156,17 @@ export default function Home() {
       <header className="flex items-center justify-center py-4 px-4 border-b border-border">
         <div className="flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-accent" />
-          <h1 className="text-xl font-bold">Event Spark</h1>
+          <h1 className="text-xl font-bold">Saved Events</h1>
         </div>
       </header>
 
       {/* Subtitle */}
       <div className="text-center py-2 px-4">
-        <p className="text-sm text-muted">Discover events in Beechworth</p>
+        <p className="text-sm text-muted">Your saved events in Beechworth</p>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 relative">
+      <div className="flex-1">
         {renderContent()}
       </div>
 
@@ -162,9 +179,7 @@ export default function Home() {
           <EventDetail
             event={selectedEvent}
             onClose={handleCloseDetail}
-            onSave={handleSave}
-            onPass={handlePass}
-            showActions={true}
+            showActions={false}
           />
         )}
       </AnimatePresence>
