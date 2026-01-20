@@ -1,35 +1,91 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useReducer } from 'react';
 import Link from 'next/link';
 import { Event } from '@/lib/types';
-import { sampleEvents } from '@/lib/sampleData';
-import { Calendar, Users, TrendingUp, Plus, Loader2 } from 'lucide-react';
+import { getAllEvents } from '@/lib/supabase';
+import { Calendar, Users, TrendingUp, Plus, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+
+type LoadingState = 'loading' | 'success' | 'error';
+
+type State = {
+  events: Event[];
+  loadingState: LoadingState;
+  errorMessage: string;
+};
+
+type Action =
+  | { type: 'LOADING' }
+  | { type: 'SUCCESS'; events: Event[] }
+  | { type: 'ERROR'; message: string };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'LOADING':
+      return { ...state, loadingState: 'loading', errorMessage: '' };
+    case 'SUCCESS':
+      return { events: action.events, loadingState: 'success', errorMessage: '' };
+    case 'ERROR':
+      return { ...state, loadingState: 'error', errorMessage: action.message };
+  }
+}
 
 export default function AdminDashboard() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [state, dispatch] = useReducer(reducer, {
+    events: [],
+    loadingState: 'loading',
+    errorMessage: '',
+  });
 
   useEffect(() => {
-    const loadEvents = async () => {
-      setIsLoading(true);
-      // In production, fetch from Supabase
-      // const events = await getAllEvents();
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setEvents(sampleEvents);
-      setIsLoading(false);
-    };
+    let cancelled = false;
+
+    async function loadEvents() {
+      dispatch({ type: 'LOADING' });
+      const result = await getAllEvents();
+
+      if (cancelled) return;
+
+      if (result.success) {
+        dispatch({ type: 'SUCCESS', events: result.data });
+      } else {
+        dispatch({ type: 'ERROR', message: result.error.message });
+      }
+    }
 
     loadEvents();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const upcomingEvents = events.filter(e => new Date(e.start_date) > new Date());
-  const freeEvents = events.filter(e => e.is_free);
+  const upcomingEvents = state.events.filter(e => new Date(e.start_date) > new Date());
+  const freeEvents = state.events.filter(e => e.is_free);
 
-  if (isLoading) {
+  if (state.loadingState === 'loading') {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      </div>
+    );
+  }
+
+  if (state.loadingState === 'error') {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 px-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+        <h2 className="text-lg font-semibold mb-2">Unable to Load Dashboard</h2>
+        <p className="text-sm text-muted mb-6 max-w-sm">
+          {state.errorMessage || 'Something went wrong while loading the dashboard.'}
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="flex items-center gap-2 px-6 py-3 bg-accent text-black font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Try Again
+        </button>
       </div>
     );
   }
@@ -56,7 +112,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-muted text-sm">Total Events</p>
-              <p className="text-2xl font-bold">{events.length}</p>
+              <p className="text-2xl font-bold">{state.events.length}</p>
             </div>
           </div>
         </div>
@@ -95,7 +151,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
         <div className="divide-y divide-border">
-          {events.slice(0, 5).map((event) => (
+          {state.events.slice(0, 5).map((event) => (
             <Link
               key={event.id}
               href={`/admin/events/${event.id}`}
@@ -126,6 +182,11 @@ export default function AdminDashboard() {
               )}
             </Link>
           ))}
+          {state.events.length === 0 && (
+            <div className="p-8 text-center text-muted">
+              No events yet. Create your first event to get started.
+            </div>
+          )}
         </div>
       </div>
     </div>
