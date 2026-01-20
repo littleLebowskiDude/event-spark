@@ -6,6 +6,9 @@ import { formatDateRange, cn } from '@/lib/utils';
 import { Calendar, MapPin, ExternalLink, X, Heart, XCircle } from 'lucide-react';
 import { isEventSaved, saveEventId, removeEventId } from '@/lib/storage';
 import { useState } from 'react';
+import { useShare } from '@/hooks/useShare';
+import ShareButton from './ShareButton';
+import ShareSheet from './ShareSheet';
 
 interface EventDetailProps {
   event: Event;
@@ -19,6 +22,15 @@ export default function EventDetail({ event, onClose, onSave, onPass, showAction
   // Initialize state directly from localStorage to avoid useEffect
   // This is safe because isEventSaved is a synchronous localStorage read
   const [isSaved, setIsSaved] = useState(() => isEventSaved(event.id));
+  const {
+    isShareSheetOpen,
+    isCopied,
+    shareUrl,
+    socialUrls,
+    share,
+    copy,
+    closeShareSheet,
+  } = useShare(event);
 
   const handleSave = () => {
     if (isSaved) {
@@ -55,14 +67,17 @@ export default function EventDetail({ event, onClose, onSave, onPass, showAction
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
-          aria-label="Close"
-        >
-          <X className="w-5 h-5 text-white" />
-        </button>
+        {/* Header Actions */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <ShareButton onClick={share} />
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
 
         {/* Category Badge */}
         <div className="absolute top-4 left-4">
@@ -179,6 +194,16 @@ export default function EventDetail({ event, onClose, onSave, onPass, showAction
           </div>
         </div>
       )}
+
+      {/* Share Sheet */}
+      <ShareSheet
+        isOpen={isShareSheetOpen}
+        onClose={closeShareSheet}
+        socialUrls={socialUrls}
+        shareUrl={shareUrl}
+        isCopied={isCopied}
+        onCopy={copy}
+      />
     </motion.div>
   );
 }
