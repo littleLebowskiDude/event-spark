@@ -149,7 +149,7 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative flex flex-col">
         {renderContent()}
       </div>
 

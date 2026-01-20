@@ -141,7 +141,7 @@ export default function SwipeStack({ events, onEventTap, onEmpty }: SwipeStackPr
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full flex flex-col outline-none"
+      className="relative w-full flex-1 flex flex-col outline-none"
       tabIndex={0}
       role="application"
       aria-label="Event card stack. Use arrow keys to swipe left or right, Enter or Space to view details."
