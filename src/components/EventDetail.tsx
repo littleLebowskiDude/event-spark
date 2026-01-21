@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useShare } from '@/hooks/useShare';
 import ShareButton from './ShareButton';
 import ShareSheet from './ShareSheet';
+import OptimizedImage from '@/components/OptimizedImage';
 
 interface EventDetailProps {
   event: Event;
@@ -43,7 +44,6 @@ export default function EventDetail({ event, onClose, onSave, onPass, showAction
     }
   };
 
-  const imageUrl = event.image_url || '/placeholder-event.svg';
   const categoryColor = event.category ? CATEGORY_COLORS[event.category] : 'bg-gray-500';
   const categoryLabel = event.category ? CATEGORY_LABELS[event.category] : 'Event';
 
@@ -61,9 +61,13 @@ export default function EventDetail({ event, onClose, onSave, onPass, showAction
     >
       {/* Hero Image */}
       <div className="relative h-72 sm:h-96">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${imageUrl})` }}
+        <OptimizedImage
+          src={event.image_url}
+          alt={event.title}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 

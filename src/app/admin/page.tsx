@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Event } from '@/lib/types';
 import { getAllEvents } from '@/lib/supabase';
 import { Calendar, Users, TrendingUp, Plus, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import OptimizedImage from '@/components/OptimizedImage';
 
 type LoadingState = 'loading' | 'success' | 'error';
 
@@ -157,10 +158,15 @@ export default function AdminDashboard() {
               href={`/admin/events/${event.id}`}
               className="flex items-center gap-4 p-4 hover:bg-card-hover transition-colors"
             >
-              <div
-                className="w-12 h-12 rounded-lg bg-cover bg-center flex-shrink-0"
-                style={{ backgroundImage: `url(${event.image_url || '/placeholder-event.svg'})` }}
-              />
+              <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                <OptimizedImage
+                  src={event.image_url}
+                  alt={event.title}
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium truncate">{event.title}</h3>
                 <p className="text-sm text-muted">

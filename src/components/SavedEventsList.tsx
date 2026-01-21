@@ -3,6 +3,7 @@
 import { Event } from '@/lib/types';
 import { formatDate, formatTime } from '@/lib/utils';
 import { Calendar, MapPin, Trash2 } from 'lucide-react';
+import OptimizedImage from '@/components/OptimizedImage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { removeEventId } from '@/lib/storage';
 
@@ -61,10 +62,15 @@ export default function SavedEventsList({ events, onEventTap, onRemove }: SavedE
                   className="bg-card rounded-xl p-4 flex gap-4 cursor-pointer hover:bg-card-hover transition-colors"
                 >
                   {/* Thumbnail */}
-                  <div
-                    className="w-20 h-20 rounded-lg bg-cover bg-center flex-shrink-0"
-                    style={{ backgroundImage: `url(${event.image_url || '/placeholder-event.svg'})` }}
-                  />
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                    <OptimizedImage
+                      src={event.image_url}
+                      alt={event.title}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                  </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">

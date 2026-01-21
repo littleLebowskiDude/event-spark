@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Event, CATEGORY_LABELS } from '@/lib/types';
 import { getAllEvents, deleteEvent as deleteEventApi } from '@/lib/supabase';
 import { Plus, Pencil, Trash2, Loader2, Search, AlertCircle, RefreshCw } from 'lucide-react';
+import OptimizedImage from '@/components/OptimizedImage';
 
 type LoadingState = 'loading' | 'success' | 'error';
 
@@ -173,10 +174,15 @@ export default function AdminEventsPage() {
                 <tr key={event.id} className="hover:bg-card-hover transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-lg bg-cover bg-center flex-shrink-0"
-                        style={{ backgroundImage: `url(${event.image_url || '/placeholder-event.svg'})` }}
-                      />
+                      <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                        <OptimizedImage
+                          src={event.image_url}
+                          alt={event.title}
+                          fill
+                          sizes="40px"
+                          className="object-cover"
+                        />
+                      </div>
                       <div className="min-w-0">
                         <p className="font-medium truncate max-w-xs">{event.title}</p>
                         <p className="text-sm text-muted truncate max-w-xs">{event.venue_name}</p>

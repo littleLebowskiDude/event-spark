@@ -71,7 +71,7 @@ export class EventDetailModal extends BasePage {
    */
   async getTitle(): Promise<string> {
     const title = this.page.locator(this.titleSelector);
-    return title.textContent() ?? '';
+    return (await title.textContent()) ?? '';
   }
 
   /**
@@ -82,7 +82,7 @@ export class EventDetailModal extends BasePage {
     // Find the date section (first flex container with Calendar icon)
     const dateSection = this.page.locator(this.dateTimeSelector).first();
     const dateText = dateSection.locator('p.font-medium');
-    return dateText.textContent() ?? '';
+    return (await dateText.textContent()) ?? '';
   }
 
   /**
@@ -116,7 +116,7 @@ export class EventDetailModal extends BasePage {
   async getDescription(): Promise<string> {
     const description = this.page.locator(this.descriptionSelector);
     if (await description.isVisible()) {
-      return description.textContent() ?? '';
+      return (await description.textContent()) ?? '';
     }
     return '';
   }
@@ -127,7 +127,7 @@ export class EventDetailModal extends BasePage {
    */
   async getCategory(): Promise<string> {
     const badge = this.page.locator(this.categoryBadgeSelector).first();
-    return badge.textContent() ?? '';
+    return (await badge.textContent()) ?? '';
   }
 
   /**
@@ -183,7 +183,7 @@ export class EventDetailModal extends BasePage {
     // Check for price display
     const priceElement = this.page.locator('.bg-card.text-foreground.rounded-full');
     if (await priceElement.isVisible()) {
-      return priceElement.textContent() ?? '';
+      return (await priceElement.textContent()) ?? '';
     }
 
     return '';
@@ -197,7 +197,7 @@ export class EventDetailModal extends BasePage {
     // Location is the link or text below venue name
     const locationLink = this.page.locator('a.text-accent').first();
     if (await locationLink.isVisible()) {
-      return locationLink.textContent() ?? '';
+      return (await locationLink.textContent()) ?? '';
     }
 
     const locationText = this.page.locator('.text-sm.text-muted').filter({
@@ -205,7 +205,7 @@ export class EventDetailModal extends BasePage {
     });
     const count = await locationText.count();
     if (count > 0) {
-      return locationText.first().textContent() ?? '';
+      return (await locationText.first().textContent()) ?? '';
     }
 
     return '';

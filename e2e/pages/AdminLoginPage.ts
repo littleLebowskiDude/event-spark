@@ -71,7 +71,7 @@ export class AdminLoginPage extends BasePage {
   async getErrorMessage(): Promise<string> {
     const errorElement = this.page.locator(this.errorMessageSelector);
     if (await errorElement.isVisible()) {
-      return errorElement.textContent() ?? '';
+      return (await errorElement.textContent()) ?? '';
     }
     return '';
   }

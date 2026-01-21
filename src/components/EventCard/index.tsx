@@ -4,6 +4,7 @@ import { useRef, useLayoutEffect } from 'react';
 import { motion, useMotionValue, useTransform, useAnimate, PanInfo } from 'framer-motion';
 import { Event, SwipeDirection } from '@/lib/types';
 import { getRelativeDate, cn } from '@/lib/utils';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import SwipeIndicator from './SwipeIndicator';
 import EventCardBadges from './EventCardBadges';
 import EventCardContent from './EventCardContent';
@@ -88,7 +89,6 @@ export default function EventCard({
     }
   };
 
-  const imageUrl = event.image_url || '/placeholder-event.svg';
   const relativeDate = getRelativeDate(event.start_date);
 
   // Show indicator during programmatic animation
@@ -125,11 +125,13 @@ export default function EventCard({
     >
       <div className="relative w-full h-full rounded-2xl overflow-hidden bg-card shadow-2xl">
         {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${imageUrl})` }}
-          role="img"
-          aria-label={`Event image for ${event.title}`}
+        <OptimizedImage
+          src={event.image_url}
+          alt={`Event image for ${event.title}`}
+          fill
+          priority={isTop}
+          sizes="(max-width: 768px) 100vw, 500px"
+          className="object-cover object-center"
         />
 
         {/* Gradient Overlay */}

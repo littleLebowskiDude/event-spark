@@ -35,7 +35,6 @@ async function globalSetup(config: FullConfig): Promise<void> {
 
   // Log test configuration
   console.log(`[Global Setup] Base URL: ${config.projects[0]?.use?.baseURL || 'http://localhost:3000'}`);
-  console.log(`[Global Setup] Test directory: ${config.testDir}`);
   console.log(`[Global Setup] Projects: ${config.projects.map(p => p.name).join(', ')}`);
   console.log(`[Global Setup] Retries: ${config.projects[0]?.retries ?? 0}`);
   console.log('\n[Global Setup] Environment validation complete.\n');

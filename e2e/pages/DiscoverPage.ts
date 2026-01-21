@@ -48,7 +48,7 @@ export class DiscoverPage extends BasePage {
     const card = this.getCurrentCard();
     // The title is in the EventCardContent component
     const titleElement = card.locator('h2').first();
-    return titleElement.textContent() ?? '';
+    return (await titleElement.textContent()) ?? '';
   }
 
   /**
@@ -151,12 +151,12 @@ export class DiscoverPage extends BasePage {
     // Check for "No more events" state first
     const emptyState = this.page.locator(this.emptyStateSelector);
     if (await emptyState.isVisible()) {
-      return emptyState.textContent() ?? '';
+      return (await emptyState.textContent()) ?? '';
     }
     // Check for "No Events Found" state
     const noEvents = this.page.locator(this.noEventsSelector);
     if (await noEvents.isVisible()) {
-      return noEvents.textContent() ?? '';
+      return (await noEvents.textContent()) ?? '';
     }
     return '';
   }
@@ -196,7 +196,7 @@ export class DiscoverPage extends BasePage {
     const errorContainer = this.page.locator('.text-red-500').first();
     const parentSection = errorContainer.locator('..').locator('..');
     const messageElement = parentSection.locator('p.text-muted');
-    return messageElement.textContent() ?? '';
+    return (await messageElement.textContent()) ?? '';
   }
 
   /**
@@ -251,7 +251,7 @@ export class DiscoverPage extends BasePage {
   async getCardCategory(): Promise<string> {
     const card = this.getCurrentCard();
     const badge = card.locator('.rounded-full.text-xs').first();
-    return badge.textContent() ?? '';
+    return (await badge.textContent()) ?? '';
   }
 
   /**
@@ -265,6 +265,6 @@ export class DiscoverPage extends BasePage {
     // Alternative: look for the text after the map pin icon
     const contentArea = card.locator('.absolute.bottom-0');
     const venueSpan = contentArea.locator('span').last();
-    return venueSpan.textContent() ?? '';
+    return (await venueSpan.textContent()) ?? '';
   }
 }

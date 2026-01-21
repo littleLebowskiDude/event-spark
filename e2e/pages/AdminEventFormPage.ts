@@ -205,7 +205,7 @@ export class AdminEventFormPage extends BasePage {
   async getFormError(): Promise<string> {
     const errorElement = this.page.locator(this.formErrorSelector);
     if (await errorElement.isVisible()) {
-      return errorElement.textContent() ?? '';
+      return (await errorElement.textContent()) ?? '';
     }
     return '';
   }
@@ -231,7 +231,7 @@ export class AdminEventFormPage extends BasePage {
     const fieldContainer = this.page.locator(`#${fieldName}`).locator('..');
     const error = fieldContainer.locator(this.fieldErrorSelector);
     if (await error.isVisible()) {
-      return error.textContent() ?? '';
+      return (await error.textContent()) ?? '';
     }
     return '';
   }
@@ -464,6 +464,6 @@ export class AdminEventFormPage extends BasePage {
    */
   async getSubmitButtonText(): Promise<string> {
     const button = this.page.locator(this.submitButtonSelector);
-    return button.textContent() ?? '';
+    return (await button.textContent()) ?? '';
   }
 }

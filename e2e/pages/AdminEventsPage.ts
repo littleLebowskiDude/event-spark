@@ -155,7 +155,7 @@ export class AdminEventsPage extends BasePage {
   async getDeleteError(): Promise<string> {
     const errorElement = this.page.locator(this.deleteErrorSelector);
     if (await errorElement.isVisible()) {
-      return errorElement.textContent() ?? '';
+      return (await errorElement.textContent()) ?? '';
     }
     return '';
   }
@@ -169,7 +169,7 @@ export class AdminEventsPage extends BasePage {
     const rows = this.getEventRows();
     const row = rows.nth(index);
     const titleCell = row.locator('p.font-medium.truncate').first();
-    return titleCell.textContent() ?? '';
+    return (await titleCell.textContent()) ?? '';
   }
 
   /**
@@ -181,7 +181,7 @@ export class AdminEventsPage extends BasePage {
     const rows = this.getEventRows();
     const row = rows.nth(index);
     const venueCell = row.locator('p.text-muted.truncate');
-    return venueCell.textContent() ?? '';
+    return (await venueCell.textContent()) ?? '';
   }
 
   /**
@@ -193,7 +193,7 @@ export class AdminEventsPage extends BasePage {
     const rows = this.getEventRows();
     const row = rows.nth(index);
     const dateCell = row.locator('td').nth(1);
-    return dateCell.textContent() ?? '';
+    return (await dateCell.textContent()) ?? '';
   }
 
   /**
@@ -205,7 +205,7 @@ export class AdminEventsPage extends BasePage {
     const rows = this.getEventRows();
     const row = rows.nth(index);
     const categoryBadge = row.locator('.rounded-full.text-xs');
-    return categoryBadge.textContent() ?? '';
+    return (await categoryBadge.textContent()) ?? '';
   }
 
   /**
@@ -217,7 +217,7 @@ export class AdminEventsPage extends BasePage {
     const rows = this.getEventRows();
     const row = rows.nth(index);
     const priceCell = row.locator('td').nth(3);
-    return priceCell.textContent() ?? '';
+    return (await priceCell.textContent()) ?? '';
   }
 
   /**

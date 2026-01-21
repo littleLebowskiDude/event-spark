@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Event, EventCategory, CATEGORY_LABELS, EventFormSchema } from '@/lib/types';
 import { Loader2, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import OptimizedImage from '@/components/OptimizedImage';
 import { cn } from '@/lib/utils';
 import { ZodError } from 'zod';
 
@@ -151,13 +152,18 @@ export default function EventForm({ event, onSubmit }: EventFormProps) {
       <div className="bg-card rounded-xl border border-border p-6">
         <label className="block text-sm font-medium mb-2">Event Image</label>
         <div className="flex gap-4">
-          <div
-            className="w-32 h-32 rounded-lg bg-cover bg-center bg-background border border-border flex items-center justify-center"
-            style={{
-              backgroundImage: formData.image_url ? `url(${formData.image_url})` : undefined,
-            }}
-          >
-            {!formData.image_url && <ImageIcon className="w-8 h-8 text-muted" />}
+          <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-background border border-border flex items-center justify-center">
+            {formData.image_url ? (
+              <OptimizedImage
+                src={formData.image_url}
+                alt="Event preview"
+                fill
+                sizes="128px"
+                className="object-cover"
+              />
+            ) : (
+              <ImageIcon className="w-8 h-8 text-muted" />
+            )}
           </div>
           <div className="flex-1">
             <input

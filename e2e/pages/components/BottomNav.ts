@@ -92,7 +92,7 @@ export class BottomNav {
   async getDiscoverLabel(): Promise<string> {
     const link = this.page.locator(this.discoverLinkSelector);
     const label = link.locator('span.text-xs');
-    return label.textContent() ?? '';
+    return (await label.textContent()) ?? '';
   }
 
   /**
@@ -102,7 +102,7 @@ export class BottomNav {
   async getSavedLabel(): Promise<string> {
     const link = this.page.locator(this.savedLinkSelector);
     const label = link.locator('span.text-xs');
-    return label.textContent() ?? '';
+    return (await label.textContent()) ?? '';
   }
 
   /**

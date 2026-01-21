@@ -62,7 +62,7 @@ export class SavedPage extends BasePage {
   async getEmptyStateMessage(): Promise<string> {
     const emptyContainer = this.page.locator('.flex.flex-col.items-center.justify-center');
     const messageElement = emptyContainer.locator('p.text-muted');
-    return messageElement.textContent() ?? '';
+    return (await messageElement.textContent()) ?? '';
   }
 
   /**
@@ -97,7 +97,7 @@ export class SavedPage extends BasePage {
     const events = this.getSavedEvents();
     const event = events.nth(index);
     const title = event.locator(this.eventTitleSelector);
-    return title.textContent() ?? '';
+    return (await title.textContent()) ?? '';
   }
 
   /**
@@ -127,7 +127,7 @@ export class SavedPage extends BasePage {
     const event = events.nth(index);
     // Venue is shown with MapPin icon
     const venueElement = event.locator('.text-muted .line-clamp-1').last();
-    return venueElement.textContent() ?? '';
+    return (await venueElement.textContent()) ?? '';
   }
 
   /**
@@ -140,7 +140,7 @@ export class SavedPage extends BasePage {
     const event = events.nth(index);
     // Time is shown with Calendar icon
     const timeElement = event.locator('.text-muted span').first();
-    return timeElement.textContent() ?? '';
+    return (await timeElement.textContent()) ?? '';
   }
 
   /**
@@ -168,7 +168,7 @@ export class SavedPage extends BasePage {
   async getErrorMessage(): Promise<string> {
     const errorContainer = this.page.locator('.flex.flex-col.items-center.justify-center');
     const messageElement = errorContainer.locator('p.text-muted');
-    return messageElement.textContent() ?? '';
+    return (await messageElement.textContent()) ?? '';
   }
 
   /**
