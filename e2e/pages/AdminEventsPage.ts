@@ -8,7 +8,8 @@ import { BasePage } from './BasePage';
 export class AdminEventsPage extends BasePage {
   // Selectors based on admin/events/page.tsx
   private readonly pageHeaderSelector = 'h1:has-text("Events")';
-  private readonly addEventButtonSelector = 'a:has-text("Add Event")';
+  // Target the Add Event button in main content area, not the nav link
+  private readonly addEventButtonSelector = 'main a:has-text("Add Event")';
   private readonly searchInputSelector = 'input[placeholder="Search events..."]';
   private readonly eventTableSelector = 'table';
   private readonly eventRowSelector = 'tbody tr';

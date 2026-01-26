@@ -105,7 +105,10 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    // Always start a fresh server to ensure env vars from .env.local are loaded
+    reuseExistingServer: false,
     timeout: 120000,
+    // Note: NEXT_PUBLIC_E2E_DEMO_MODE is set in .env.local to enable demo auth
+    // while keeping Supabase configured for data operations
   },
 });

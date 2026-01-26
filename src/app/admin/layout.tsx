@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { isSupabaseConfigured, isDevelopment } from '@/lib/env';
+import { isSupabaseConfigured, isDevelopment, isE2EDemoMode } from '@/lib/env';
 import { Sparkles, LogOut, List, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -22,26 +22,43 @@ export default function AdminLayout({
   useEffect(() => {
     const checkAuth = async () => {
       const supabaseEnabled = isSupabaseConfigured();
+      const e2eDemoMode = isE2EDemoMode();
+
+      // Check for demo session (E2E demo mode OR development without Supabase)
+      const canUseDemoSession = e2eDemoMode || (!supabaseEnabled && isDevelopment());
+
+      if (canUseDemoSession) {
+        const demoSession = typeof window !== 'undefined'
+          ? sessionStorage.getItem('demo_admin_session') === 'true'
+          : false;
+
+        if (demoSession) {
+          setIsAuthenticated(true);
+          setIsDemoSession(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // If on login page, allow it
+        if (pathname === '/admin/login') {
+          setIsLoading(false);
+          return;
+        }
+
+        // In E2E demo mode or development without Supabase, redirect to login if no demo session
+        // This ensures E2E tests can properly test the auth redirect
+        if (e2eDemoMode || !supabaseEnabled) {
+          router.push('/admin/login');
+          setIsLoading(false);
+          return;
+        }
+      }
 
       // Check if Supabase is configured
       if (!supabaseEnabled) {
-        // Demo mode - only in development with session check
-        if (isDevelopment()) {
-          const demoSession = typeof window !== 'undefined'
-            ? sessionStorage.getItem('demo_admin_session') === 'true'
-            : false;
-
-          if (demoSession || pathname === '/admin/login') {
-            setIsAuthenticated(demoSession);
-            setIsDemoSession(demoSession);
-          } else {
-            router.push('/admin/login');
-          }
-        } else {
-          // Production without Supabase - redirect to login
-          if (pathname !== '/admin/login') {
-            router.push('/admin/login');
-          }
+        // Production without Supabase - redirect to login
+        if (pathname !== '/admin/login') {
+          router.push('/admin/login');
         }
         setIsLoading(false);
         return;
@@ -60,8 +77,10 @@ export default function AdminLayout({
 
     checkAuth();
 
-    // Only set up Supabase subscription if configured
-    if (isSupabaseConfigured()) {
+    // Only set up Supabase subscription if configured AND not in E2E demo mode
+    // Skip the listener if we're using demo session to prevent it from redirecting
+    const e2eDemoMode = isE2EDemoMode();
+    if (isSupabaseConfigured() && !e2eDemoMode) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session) {
           setIsAuthenticated(true);

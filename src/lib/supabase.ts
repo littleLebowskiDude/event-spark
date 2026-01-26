@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import type { Event, CreateEventInput, UpdateEventInput } from './types';
+import { isE2EDemoMode } from './env';
 
 // ============================================================================
 // Error Types
@@ -92,6 +93,117 @@ function isSupabaseConfigured(): boolean {
   return Boolean(supabaseUrl && supabaseAnonKey);
 }
 
+// ============================================================================
+// E2E Demo Mode Storage
+// Uses localStorage for event storage during E2E tests
+// ============================================================================
+
+const DEMO_EVENTS_KEY = 'demo_events_storage';
+
+/**
+ * Generate a UUID for demo events
+ */
+function generateDemoUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/**
+ * Get seed events for demo mode
+ */
+function getSeedDemoEvents(): Event[] {
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  return [
+    {
+      id: 'demo-event-001',
+      title: 'Community Market Day',
+      description: 'Join us for a local market featuring fresh produce, handmade crafts, and live entertainment.',
+      image_url: 'https://picsum.photos/seed/market/800/600',
+      start_date: tomorrow.toISOString(),
+      end_date: null,
+      location: 'Town Square, Beechworth VIC 3747',
+      venue_name: 'Beechworth Town Square',
+      category: 'market',
+      ticket_url: null,
+      is_free: true,
+      price: null,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+    {
+      id: 'demo-event-002',
+      title: 'Live Jazz Night',
+      description: 'An evening of smooth jazz with local and touring musicians.',
+      image_url: 'https://picsum.photos/seed/jazz/800/600',
+      start_date: nextWeek.toISOString(),
+      end_date: null,
+      location: '45 Ford Street, Beechworth VIC 3747',
+      venue_name: 'The Bridge Hotel',
+      category: 'music',
+      ticket_url: 'https://example.com/jazz-night',
+      is_free: false,
+      price: '$25',
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+    {
+      id: 'demo-event-003',
+      title: 'Art Workshop: Watercolors',
+      description: 'Learn watercolor painting techniques in this beginner-friendly workshop.',
+      image_url: 'https://picsum.photos/seed/art/800/600',
+      start_date: nextMonth.toISOString(),
+      end_date: null,
+      location: '12 Camp Street, Beechworth VIC 3747',
+      venue_name: 'Beechworth Arts Center',
+      category: 'workshop',
+      ticket_url: 'https://example.com/workshop',
+      is_free: false,
+      price: '$45',
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    },
+  ];
+}
+
+/**
+ * Get demo events from localStorage (or seed if empty)
+ */
+function getDemoEvents(): Event[] {
+  if (typeof window === 'undefined') {
+    return getSeedDemoEvents();
+  }
+
+  const stored = localStorage.getItem(DEMO_EVENTS_KEY);
+  if (!stored) {
+    const seedEvents = getSeedDemoEvents();
+    localStorage.setItem(DEMO_EVENTS_KEY, JSON.stringify(seedEvents));
+    return seedEvents;
+  }
+
+  try {
+    return JSON.parse(stored);
+  } catch {
+    const seedEvents = getSeedDemoEvents();
+    localStorage.setItem(DEMO_EVENTS_KEY, JSON.stringify(seedEvents));
+    return seedEvents;
+  }
+}
+
+/**
+ * Save demo events to localStorage
+ */
+function saveDemoEvents(events: Event[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(DEMO_EVENTS_KEY, JSON.stringify(events));
+}
+
 /**
  * Check if Supabase is properly configured.
  * Useful for conditional rendering in components.
@@ -121,6 +233,15 @@ export function checkSupabaseConfig(): { configured: boolean; message?: string }
  * Returns a Result type for explicit error handling.
  */
 export async function getEvents(): Promise<Result<Event[], DatabaseError>> {
+  // Use demo storage in E2E demo mode
+  if (isE2EDemoMode()) {
+    const now = new Date();
+    const events = getDemoEvents()
+      .filter((e) => new Date(e.start_date) >= now)
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    return ok(events);
+  }
+
   if (!isSupabaseConfigured()) {
     return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
@@ -153,12 +274,22 @@ export async function getEvents(): Promise<Result<Event[], DatabaseError>> {
  * Returns a Result type with NotFoundError if event doesn't exist.
  */
 export async function getEventById(id: string): Promise<Result<Event, DatabaseError | NotFoundError>> {
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
-  }
-
   if (!id) {
     return err(new ValidationError('Event ID is required', 'id') as unknown as DatabaseError);
+  }
+
+  // Use demo storage in E2E demo mode
+  if (isE2EDemoMode()) {
+    const events = getDemoEvents();
+    const event = events.find((e) => e.id === id);
+    if (!event) {
+      return err(new NotFoundError('Event', id));
+    }
+    return ok(event);
+  }
+
+  if (!isSupabaseConfigured()) {
+    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -197,12 +328,20 @@ export async function getEventById(id: string): Promise<Result<Event, DatabaseEr
  * Useful for fetching saved events from local storage.
  */
 export async function getEventsByIds(ids: string[]): Promise<Result<Event[], DatabaseError>> {
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
-  }
-
   if (ids.length === 0) {
     return ok([]);
+  }
+
+  // Use demo storage in E2E demo mode
+  if (isE2EDemoMode()) {
+    const events = getDemoEvents()
+      .filter((e) => ids.includes(e.id))
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    return ok(events);
+  }
+
+  if (!isSupabaseConfigured()) {
+    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -233,6 +372,14 @@ export async function getEventsByIds(ids: string[]): Promise<Result<Event[], Dat
  * Used for admin dashboard.
  */
 export async function getAllEvents(): Promise<Result<Event[], DatabaseError>> {
+  // Use demo storage in E2E demo mode
+  if (isE2EDemoMode()) {
+    const events = getDemoEvents();
+    return ok(events.sort((a, b) =>
+      new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+    ));
+  }
+
   if (!isSupabaseConfigured()) {
     return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
@@ -266,6 +413,32 @@ export async function getAllEvents(): Promise<Result<Event[], DatabaseError>> {
 export async function createEvent(
   event: CreateEventInput
 ): Promise<Result<Event, DatabaseError | ValidationError>> {
+  // Use demo storage in E2E demo mode
+  if (isE2EDemoMode()) {
+    const now = new Date().toISOString();
+    const newEvent: Event = {
+      id: generateDemoUUID(),
+      title: event.title,
+      description: event.description || null,
+      image_url: event.image_url || null,
+      start_date: event.start_date,
+      end_date: event.end_date || null,
+      location: event.location || null,
+      venue_name: event.venue_name || null,
+      category: event.category || null,
+      ticket_url: event.ticket_url || null,
+      is_free: event.is_free ?? true,
+      price: event.price || null,
+      created_at: now,
+      updated_at: now,
+    };
+
+    const events = getDemoEvents();
+    events.push(newEvent);
+    saveDemoEvents(events);
+    return ok(newEvent);
+  }
+
   if (!isSupabaseConfigured()) {
     return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
@@ -311,12 +484,30 @@ export async function updateEvent(
   id: string,
   event: UpdateEventInput
 ): Promise<Result<Event, DatabaseError | NotFoundError | ValidationError>> {
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
-  }
-
   if (!id) {
     return err(new ValidationError('Event ID is required', 'id'));
+  }
+
+  // Use demo storage in E2E demo mode
+  if (isE2EDemoMode()) {
+    const events = getDemoEvents();
+    const index = events.findIndex((e) => e.id === id);
+    if (index === -1) {
+      return err(new NotFoundError('Event', id));
+    }
+
+    const updatedEvent: Event = {
+      ...events[index],
+      ...event,
+      updated_at: new Date().toISOString(),
+    };
+    events[index] = updatedEvent;
+    saveDemoEvents(events);
+    return ok(updatedEvent);
+  }
+
+  if (!isSupabaseConfigured()) {
+    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -357,12 +548,25 @@ export async function updateEvent(
  * Returns true on success.
  */
 export async function deleteEvent(id: string): Promise<Result<boolean, DatabaseError | NotFoundError>> {
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
-  }
-
   if (!id) {
     return err(new ValidationError('Event ID is required', 'id') as unknown as DatabaseError);
+  }
+
+  // Use demo storage in E2E demo mode
+  if (isE2EDemoMode()) {
+    const events = getDemoEvents();
+    const index = events.findIndex((e) => e.id === id);
+    if (index === -1) {
+      return err(new NotFoundError('Event', id));
+    }
+
+    events.splice(index, 1);
+    saveDemoEvents(events);
+    return ok(true);
+  }
+
+  if (!isSupabaseConfigured()) {
+    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { isSupabaseConfigured, isDevelopment } from '@/lib/env';
+import { isSupabaseConfigured, isDevelopment, isE2EDemoMode } from '@/lib/env';
 import { Sparkles, Loader2, AlertCircle, ShieldAlert } from 'lucide-react';
 
 // Demo credentials - only work in development when Supabase is not configured
@@ -18,7 +18,8 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
 
   const supabaseConfigured = isSupabaseConfigured();
-  const showDemoMode = !supabaseConfigured && isDevelopment();
+  const e2eDemoMode = isE2EDemoMode();
+  const showDemoMode = (!supabaseConfigured && isDevelopment()) || e2eDemoMode;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,18 +27,22 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
+      // Check if demo mode is available (development without Supabase OR E2E demo mode)
+      const canUseDemoMode = (!supabaseConfigured && isDevelopment()) || e2eDemoMode;
+
+      if (canUseDemoMode && email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+        // Demo mode login
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('demo_admin_session', 'true');
+        }
+        router.push('/admin');
+        return;
+      }
+
       // Check if Supabase is configured
       if (!supabaseConfigured) {
-        // Demo mode - only in development
+        // Development without Supabase and invalid demo credentials
         if (isDevelopment()) {
-          if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-            // Set a session indicator for demo mode
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem('demo_admin_session', 'true');
-            }
-            router.push('/admin');
-            return;
-          }
           throw new Error('Invalid credentials for demo mode.');
         } else {
           // Production without Supabase - block access

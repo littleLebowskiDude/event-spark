@@ -41,8 +41,8 @@ test.describe('Admin CRUD Operations', () => {
       // Attempt login with invalid credentials
       await loginPage.login('wrong@example.com', 'wrongpassword');
 
-      // Wait for error to appear
-      await page.waitForTimeout(500);
+      // Wait for error to appear (with proper waiting instead of fixed timeout)
+      await loginPage.waitForError();
 
       // Verify error message is displayed
       const hasError = await loginPage.hasError();
@@ -67,7 +67,7 @@ test.describe('Admin CRUD Operations', () => {
       expect(isLoggedIn).toBe(true);
 
       // Verify URL is the admin dashboard
-      expect(page.url()).toMatch(/\/admin$/);
+      expect(page.url()).toMatch(/\/admin\/?$/);
     });
 
     test('should redirect to login when accessing /admin/events without auth', async ({ page }) => {
@@ -80,10 +80,10 @@ test.describe('Admin CRUD Operations', () => {
       // Try to access protected admin events page directly
       await page.goto(ADMIN_ROUTES.events);
 
-      // Wait for potential redirect
-      await page.waitForTimeout(1000);
+      // Wait for redirect to login page (instead of fixed timeout)
+      await page.waitForURL('**/admin/login', { timeout: 10000 });
 
-      // Should be redirected to login page
+      // Verify we're on the login page
       expect(page.url()).toContain('/admin/login');
     });
   });
@@ -95,13 +95,12 @@ test.describe('Admin CRUD Operations', () => {
    */
   test.describe('Events List (Read)', () => {
     test.beforeEach(async ({ page }) => {
-      // Login before each test in this group
-      await loginAsAdmin(page);
+      // Login and navigate to events page
+      await loginAsAdmin(page, { navigateTo: ADMIN_ROUTES.events });
     });
 
     test('should display events table after login', async ({ page }) => {
       const eventsPage = new AdminEventsPage(page);
-      await eventsPage.goto();
       await eventsPage.waitForEventsToLoad();
 
       // Verify page header is visible
@@ -337,7 +336,8 @@ test.describe('Admin CRUD Operations', () => {
       await eventsPage.clickEditEvent(0);
 
       // Verify we're on an edit form (URL contains /admin/events/<id>)
-      expect(page.url()).toMatch(/\/admin\/events\/[a-f0-9-]+$/i);
+      // Regex accepts UUIDs (a-f0-9-) and demo IDs (alphanumeric with hyphens)
+      expect(page.url()).toMatch(/\/admin\/events\/[\w-]+$/i);
 
       // Verify form elements are visible
       const formPage = new AdminEventFormPage(page);
@@ -408,7 +408,8 @@ test.describe('Admin CRUD Operations', () => {
 
       // Verify we're back on the events list
       expect(page.url()).toContain('/admin/events');
-      expect(page.url()).not.toMatch(/\/admin\/events\/[a-f0-9-]+/i);
+      // Verify we're NOT on an edit form (no ID in URL)
+      expect(page.url()).not.toMatch(/\/admin\/events\/[\w-]+$/i);
 
       // Search for the updated event
       await eventsPage.waitForEventsToLoad();

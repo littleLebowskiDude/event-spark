@@ -10,7 +10,8 @@ export class AdminLoginPage extends BasePage {
   private readonly emailInputSelector = 'input#email';
   private readonly passwordInputSelector = 'input#password';
   private readonly loginButtonSelector = 'button[type="submit"]';
-  private readonly errorMessageSelector = '.bg-red-500\\/10 .text-sm';
+  // Use attribute selector to avoid CSS escaping issues with Tailwind's slash notation
+  private readonly errorMessageSelector = '[class*="bg-red-500"] p.text-sm';
   private readonly loadingSpinnerSelector = '.animate-spin';
   private readonly demoModeSelector = 'text=Development Mode';
   private readonly pageHeaderSelector = 'h2:has-text("Admin Login")';
@@ -86,6 +87,15 @@ export class AdminLoginPage extends BasePage {
   }
 
   /**
+   * Waits for an error message to appear.
+   * @param timeout - Maximum time to wait (default: 5000)
+   */
+  async waitForError(timeout: number = 5000): Promise<void> {
+    const errorElement = this.page.locator(this.errorMessageSelector);
+    await errorElement.waitFor({ state: 'visible', timeout });
+  }
+
+  /**
    * Checks if the user has been redirected after successful login.
    * Successful login redirects to /admin or /admin/events.
    * @returns True if user appears to be logged in (redirected)
@@ -127,7 +137,7 @@ export class AdminLoginPage extends BasePage {
    * @returns Object with email and password, or null if not in demo mode
    */
   async getDemoCredentials(): Promise<{ email: string; password: string } | null> {
-    const demoNotice = this.page.locator('.bg-yellow-500\\/10');
+    const demoNotice = this.page.locator('[class*="bg-yellow-500"]');
     if (!(await demoNotice.isVisible())) {
       return null;
     }

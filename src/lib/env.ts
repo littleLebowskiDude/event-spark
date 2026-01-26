@@ -78,6 +78,14 @@ export function isDevelopment(): boolean {
 }
 
 /**
+ * Check if E2E demo mode is enabled.
+ * This allows demo authentication to work even when Supabase is configured.
+ */
+export function isE2EDemoMode(): boolean {
+  return process.env.NEXT_PUBLIC_E2E_DEMO_MODE === 'true';
+}
+
+/**
  * Check if Supabase is properly configured.
  */
 export function isSupabaseConfigured(): boolean {

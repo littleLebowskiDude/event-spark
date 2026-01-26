@@ -34,32 +34,67 @@ export const DEMO_SESSION_KEY = 'demo_admin_session';
  */
 export async function loginAsAdmin(
   page: Page,
-  options: { useForm?: boolean } = {}
+  options: { useForm?: boolean; navigateTo?: string } = {}
 ): Promise<void> {
-  const { useForm = false } = options;
+  const { useForm = true, navigateTo } = options;
 
   if (useForm) {
-    // Navigate to login page and use the form (only works in demo mode)
+    // Navigate to login page and use the form
     await page.goto(ADMIN_ROUTES.login);
     await page.waitForSelector('form');
-    await page.locator('input#email').fill(DEMO_CREDENTIALS.email);
-    await page.locator('input#password').fill(DEMO_CREDENTIALS.password);
-    await page.locator('button[type="submit"]').click();
-    await page.waitForURL('**/admin', { timeout: 10000 });
-  } else {
-    // Directly seed the demo session (works in all environments)
-    await page.goto(ADMIN_ROUTES.dashboard);
 
-    // Set the demo session in sessionStorage
-    await page.evaluate((key) => {
+    // Fill form fields with explicit waits for each input
+    const emailInput = page.locator('input#email');
+    await emailInput.waitFor({ state: 'visible' });
+    await emailInput.fill(DEMO_CREDENTIALS.email);
+
+    const passwordInput = page.locator('input#password');
+    await passwordInput.waitFor({ state: 'visible' });
+    await passwordInput.fill(DEMO_CREDENTIALS.password);
+
+    // Wait for button to be enabled and click with explicit wait
+    const submitButton = page.locator('button[type="submit"]');
+    await submitButton.waitFor({ state: 'visible' });
+    await Promise.all([
+      page.waitForURL(/\/admin(?!\/login)/, { timeout: 15000 }),
+      submitButton.click(),
+    ]);
+
+    // Wait for the page to stabilize and ensure session is persisted
+    await page.waitForLoadState('networkidle');
+
+    // Verify session was set
+    const hasSession = await page.evaluate((key) => {
+      return sessionStorage.getItem(key) === 'true';
+    }, DEMO_SESSION_KEY);
+
+    if (!hasSession) {
+      throw new Error('Demo session was not set after login');
+    }
+
+    // If navigateTo is specified, click the nav link to go there
+    if (navigateTo) {
+      // Use client-side navigation via nav link to preserve session
+      const linkText = navigateTo === ADMIN_ROUTES.events ? 'Events' : 'Dashboard';
+      await page.click(`nav a:has-text("${linkText}")`);
+      await page.waitForURL(`**${navigateTo}`);
+      await page.waitForLoadState('networkidle');
+    }
+  } else {
+    // Directly seed the demo session using addInitScript
+    // This runs before any page scripts, ensuring the session is set before React hydrates
+    await page.addInitScript((key) => {
       sessionStorage.setItem(key, 'true');
     }, DEMO_SESSION_KEY);
 
-    // Reload to apply the session
-    await page.reload();
+    // Now navigate to admin - the session will already be set
+    await page.goto(ADMIN_ROUTES.dashboard);
+
+    // Wait for the page to fully load
+    await page.waitForLoadState('networkidle');
 
     // Verify we're on the admin page (not redirected to login)
-    await expect(page).toHaveURL(/\/admin/);
+    await expect(page).toHaveURL(/\/admin(?!\/login)/);
   }
 }
 
