@@ -4,7 +4,13 @@ const DISMISSED_EVENTS_KEY = 'event-spark-dismissed-events';
 export function getSavedEventIds(): string[] {
   if (typeof window === 'undefined') return [];
   const saved = localStorage.getItem(SAVED_EVENTS_KEY);
-  return saved ? JSON.parse(saved) : [];
+  if (!saved) return [];
+  try {
+    return JSON.parse(saved);
+  } catch {
+    localStorage.removeItem(SAVED_EVENTS_KEY);
+    return [];
+  }
 }
 
 export function saveEventId(eventId: string): void {
@@ -28,7 +34,13 @@ export function isEventSaved(eventId: string): boolean {
 export function getDismissedEventIds(): string[] {
   if (typeof window === 'undefined') return [];
   const dismissed = localStorage.getItem(DISMISSED_EVENTS_KEY);
-  return dismissed ? JSON.parse(dismissed) : [];
+  if (!dismissed) return [];
+  try {
+    return JSON.parse(dismissed);
+  } catch {
+    localStorage.removeItem(DISMISSED_EVENTS_KEY);
+    return [];
+  }
 }
 
 export function dismissEventId(eventId: string): void {

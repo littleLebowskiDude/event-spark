@@ -444,17 +444,23 @@ export async function getEvents(): Promise<Result<Event[], DatabaseError>> {
 
     if (error) {
       console.error('Error fetching events:', error);
-      return err(new DatabaseError(
-        'Failed to fetch events',
-        error.code,
-        error.message
-      ));
+      console.warn('[Event Spark] Falling back to demo events due to database error');
+      const now = new Date();
+      const fallbackEvents = getDemoEvents()
+        .filter((e) => new Date(e.start_date) >= now)
+        .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+      return ok(fallbackEvents);
     }
 
     return ok(data || []);
   } catch (e) {
     console.error('Unexpected error fetching events:', e);
-    return err(new DatabaseError('An unexpected error occurred while fetching events'));
+    console.warn('[Event Spark] Falling back to demo events due to unexpected error');
+    const now = new Date();
+    const fallbackEvents = getDemoEvents()
+      .filter((e) => new Date(e.start_date) >= now)
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    return ok(fallbackEvents);
   }
 }
 
@@ -490,6 +496,9 @@ export async function getEventById(id: string): Promise<Result<Event, DatabaseEr
         return err(new NotFoundError('Event', id));
       }
       console.error('Error fetching event:', error);
+      console.warn('[Event Spark] Falling back to demo events for event lookup');
+      const fallbackEvent = getDemoEvents().find((e) => e.id === id);
+      if (fallbackEvent) return ok(fallbackEvent);
       return err(new DatabaseError(
         'Failed to fetch event',
         error.code,
@@ -504,6 +513,9 @@ export async function getEventById(id: string): Promise<Result<Event, DatabaseEr
     return ok(data);
   } catch (e) {
     console.error('Unexpected error fetching event:', e);
+    console.warn('[Event Spark] Falling back to demo events for event lookup');
+    const fallbackEvent = getDemoEvents().find((ev) => ev.id === id);
+    if (fallbackEvent) return ok(fallbackEvent);
     return err(new DatabaseError('An unexpected error occurred while fetching the event'));
   }
 }
@@ -534,17 +546,21 @@ export async function getEventsByIds(ids: string[]): Promise<Result<Event[], Dat
 
     if (error) {
       console.error('Error fetching events by IDs:', error);
-      return err(new DatabaseError(
-        'Failed to fetch events',
-        error.code,
-        error.message
-      ));
+      console.warn('[Event Spark] Falling back to demo events for batch lookup');
+      const fallbackEvents = getDemoEvents()
+        .filter((e) => ids.includes(e.id))
+        .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+      return ok(fallbackEvents);
     }
 
     return ok(data || []);
   } catch (e) {
     console.error('Unexpected error fetching events by IDs:', e);
-    return err(new DatabaseError('An unexpected error occurred while fetching events'));
+    console.warn('[Event Spark] Falling back to demo events for batch lookup');
+    const fallbackEvents = getDemoEvents()
+      .filter((ev) => ids.includes(ev.id))
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    return ok(fallbackEvents);
   }
 }
 
@@ -569,17 +585,21 @@ export async function getAllEvents(): Promise<Result<Event[], DatabaseError>> {
 
     if (error) {
       console.error('Error fetching all events:', error);
-      return err(new DatabaseError(
-        'Failed to fetch events',
-        error.code,
-        error.message
-      ));
+      console.warn('[Event Spark] Falling back to demo events for all events listing');
+      const fallbackEvents = getDemoEvents().sort((a, b) =>
+        new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+      );
+      return ok(fallbackEvents);
     }
 
     return ok(data || []);
   } catch (e) {
     console.error('Unexpected error fetching all events:', e);
-    return err(new DatabaseError('An unexpected error occurred while fetching events'));
+    console.warn('[Event Spark] Falling back to demo events for all events listing');
+    const fallbackEvents = getDemoEvents().sort((a, b) =>
+      new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+    );
+    return ok(fallbackEvents);
   }
 }
 

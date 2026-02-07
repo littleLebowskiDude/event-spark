@@ -31,8 +31,9 @@ describe('storage', () => {
     it('should handle malformed JSON gracefully', () => {
       localStorage.setItem('event-spark-saved-events', 'not valid json');
 
-      // This will throw - the function doesn't handle malformed JSON
-      expect(() => getSavedEventIds()).toThrow();
+      expect(getSavedEventIds()).toEqual([]);
+      // Corrupted data should be cleaned up
+      expect(localStorage.getItem('event-spark-saved-events')).toBeNull();
     });
   });
 
