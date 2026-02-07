@@ -426,17 +426,13 @@ export function checkSupabaseConfig(): { configured: boolean; message?: string }
  * Returns a Result type for explicit error handling.
  */
 export async function getEvents(): Promise<Result<Event[], DatabaseError>> {
-  // Use demo storage in E2E demo mode
-  if (isE2EDemoMode()) {
+  // Use demo storage in E2E demo mode or when Supabase is not configured
+  if (isE2EDemoMode() || !isSupabaseConfigured()) {
     const now = new Date();
     const events = getDemoEvents()
       .filter((e) => new Date(e.start_date) >= now)
       .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
     return ok(events);
-  }
-
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -471,18 +467,14 @@ export async function getEventById(id: string): Promise<Result<Event, DatabaseEr
     return err(new ValidationError('Event ID is required', 'id') as unknown as DatabaseError);
   }
 
-  // Use demo storage in E2E demo mode
-  if (isE2EDemoMode()) {
+  // Use demo storage in E2E demo mode or when Supabase is not configured
+  if (isE2EDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents();
     const event = events.find((e) => e.id === id);
     if (!event) {
       return err(new NotFoundError('Event', id));
     }
     return ok(event);
-  }
-
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -525,16 +517,12 @@ export async function getEventsByIds(ids: string[]): Promise<Result<Event[], Dat
     return ok([]);
   }
 
-  // Use demo storage in E2E demo mode
-  if (isE2EDemoMode()) {
+  // Use demo storage in E2E demo mode or when Supabase is not configured
+  if (isE2EDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents()
       .filter((e) => ids.includes(e.id))
       .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
     return ok(events);
-  }
-
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -565,16 +553,12 @@ export async function getEventsByIds(ids: string[]): Promise<Result<Event[], Dat
  * Used for admin dashboard.
  */
 export async function getAllEvents(): Promise<Result<Event[], DatabaseError>> {
-  // Use demo storage in E2E demo mode
-  if (isE2EDemoMode()) {
+  // Use demo storage in E2E demo mode or when Supabase is not configured
+  if (isE2EDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents();
     return ok(events.sort((a, b) =>
       new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
     ));
-  }
-
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -606,8 +590,8 @@ export async function getAllEvents(): Promise<Result<Event[], DatabaseError>> {
 export async function createEvent(
   event: CreateEventInput
 ): Promise<Result<Event, DatabaseError | ValidationError>> {
-  // Use demo storage in E2E demo mode
-  if (isE2EDemoMode()) {
+  // Use demo storage in E2E demo mode or when Supabase is not configured
+  if (isE2EDemoMode() || !isSupabaseConfigured()) {
     const now = new Date().toISOString();
     const newEvent: Event = {
       id: generateDemoUUID(),
@@ -630,10 +614,6 @@ export async function createEvent(
     events.push(newEvent);
     saveDemoEvents(events);
     return ok(newEvent);
-  }
-
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -681,8 +661,8 @@ export async function updateEvent(
     return err(new ValidationError('Event ID is required', 'id'));
   }
 
-  // Use demo storage in E2E demo mode
-  if (isE2EDemoMode()) {
+  // Use demo storage in E2E demo mode or when Supabase is not configured
+  if (isE2EDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents();
     const index = events.findIndex((e) => e.id === id);
     if (index === -1) {
@@ -697,10 +677,6 @@ export async function updateEvent(
     events[index] = updatedEvent;
     saveDemoEvents(events);
     return ok(updatedEvent);
-  }
-
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
@@ -745,8 +721,8 @@ export async function deleteEvent(id: string): Promise<Result<boolean, DatabaseE
     return err(new ValidationError('Event ID is required', 'id') as unknown as DatabaseError);
   }
 
-  // Use demo storage in E2E demo mode
-  if (isE2EDemoMode()) {
+  // Use demo storage in E2E demo mode or when Supabase is not configured
+  if (isE2EDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents();
     const index = events.findIndex((e) => e.id === id);
     if (index === -1) {
@@ -756,10 +732,6 @@ export async function deleteEvent(id: string): Promise<Result<boolean, DatabaseE
     events.splice(index, 1);
     saveDemoEvents(events);
     return ok(true);
-  }
-
-  if (!isSupabaseConfigured()) {
-    return err(new DatabaseError('Supabase is not configured. Check environment variables.'));
   }
 
   try {
