@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#713f12" />
+      <stop offset="100%" stop-color="#111827" />
+    </radialGradient>
+  </defs>
+  <rect fill="url(#bg)" width="800" height="600"/>
+  <!-- Lightbulb (creative workshop) -->
+  <g transform="translate(400,275)" fill="none" stroke="#eab308" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5">
+    <!-- Bulb -->
+    <path d="M-35,0 Q-35,-55 0,-65 Q35,-55 35,0 Q35,20 20,30 L-20,30 Q-35,20 -35,0 Z" fill="#eab308" fill-opacity="0.1"/>
+    <path d="M-35,0 Q-35,-55 0,-65 Q35,-55 35,0 Q35,20 20,30 L-20,30 Q-35,20 -35,0 Z"/>
+    <!-- Base lines -->
+    <line x1="-18" y1="40" x2="18" y2="40"/>
+    <line x1="-15" y1="50" x2="15" y2="50"/>
+    <line x1="-10" y1="60" x2="10" y2="60"/>
+    <!-- Filament glow lines -->
+    <path d="M-10,-20 L0,-10 L10,-20" fill="none"/>
+    <!-- Rays -->
+    <line x1="0" y1="-85" x2="0" y2="-95"/>
+    <line x1="-45" y1="-55" x2="-52" y2="-62"/>
+    <line x1="45" y1="-55" x2="52" y2="-62"/>
+    <line x1="-55" y1="-5" x2="-65" y2="-5"/>
+    <line x1="55" y1="-5" x2="65" y2="-5"/>
+  </g>
+</svg>

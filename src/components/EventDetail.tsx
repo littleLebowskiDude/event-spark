@@ -68,6 +68,7 @@ export default function EventDetail({ event, onClose, onSave, onPass, showAction
           priority
           sizes="100vw"
           className="object-cover object-center"
+          category={event.category}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 

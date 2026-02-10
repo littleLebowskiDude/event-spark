@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import OptimizedImage from './OptimizedImage';
+import OptimizedImage, { getCategoryPlaceholder } from './OptimizedImage';
 
 // Mock next/image component
 vi.mock('next/image', () => ({
@@ -564,6 +564,140 @@ describe('OptimizedImage', () => {
       expect(props.quality).toBe(75);
       expect(props.placeholder).toBe('blur');
       expect(props.blurDataURL).toBe(BLUR_DATA_URL);
+    });
+  });
+
+  describe('Category Placeholders', () => {
+    it('should use category-specific placeholder when src is null and category is provided', () => {
+      render(
+        <OptimizedImage
+          src={null}
+          alt="Music event"
+          width={400}
+          height={300}
+          category="music"
+        />
+      );
+
+      const image = screen.getByTestId('next-image');
+      expect(image).toHaveAttribute('src', '/placeholders/music.svg');
+    });
+
+    it('should use category placeholder for each category', () => {
+      const categories = ['music', 'food', 'market', 'art', 'community', 'sport', 'workshop', 'festival', 'other'] as const;
+
+      categories.forEach((category) => {
+        vi.clearAllMocks();
+        const { unmount } = render(
+          <OptimizedImage
+            src={null}
+            alt={`${category} event`}
+            width={400}
+            height={300}
+            category={category}
+          />
+        );
+
+        const props = getImageProps();
+        expect(props.src).toBe(`/placeholders/${category}.svg`);
+        unmount();
+      });
+    });
+
+    it('should fall back to generic placeholder when category is null', () => {
+      render(
+        <OptimizedImage
+          src={null}
+          alt="No category"
+          width={400}
+          height={300}
+          category={null}
+        />
+      );
+
+      const image = screen.getByTestId('next-image');
+      expect(image).toHaveAttribute('src', PLACEHOLDER_IMAGE);
+    });
+
+    it('should fall back to generic placeholder when category is not provided', () => {
+      render(
+        <OptimizedImage
+          src={null}
+          alt="No category prop"
+          width={400}
+          height={300}
+        />
+      );
+
+      const image = screen.getByTestId('next-image');
+      expect(image).toHaveAttribute('src', PLACEHOLDER_IMAGE);
+    });
+
+    it('should use real image when src is valid even with category', () => {
+      render(
+        <OptimizedImage
+          src="https://example.com/image.jpg"
+          alt="Has both"
+          width={400}
+          height={300}
+          category="music"
+        />
+      );
+
+      const image = screen.getByTestId('next-image');
+      expect(image).toHaveAttribute('src', 'https://example.com/image.jpg');
+    });
+
+    it('should fall back to category placeholder on error when category is provided', () => {
+      render(
+        <OptimizedImage
+          src="https://example.com/broken.jpg"
+          alt="Error with category"
+          width={400}
+          height={300}
+          category="food"
+        />
+      );
+
+      const image = screen.getByTestId('next-image');
+      expect(image).toHaveAttribute('src', 'https://example.com/broken.jpg');
+
+      fireEvent.error(image);
+
+      const updatedImage = screen.getByTestId('next-image');
+      expect(updatedImage).toHaveAttribute('src', '/placeholders/food.svg');
+    });
+
+    it('should use empty placeholder mode for category placeholders', () => {
+      render(
+        <OptimizedImage
+          src={null}
+          alt="Category placeholder mode"
+          width={400}
+          height={300}
+          category="art"
+        />
+      );
+
+      const props = getImageProps();
+      expect(props.placeholder).toBe('empty');
+      expect(props.blurDataURL).toBeUndefined();
+    });
+  });
+
+  describe('getCategoryPlaceholder', () => {
+    it('should return category-specific path for valid categories', () => {
+      expect(getCategoryPlaceholder('music')).toBe('/placeholders/music.svg');
+      expect(getCategoryPlaceholder('food')).toBe('/placeholders/food.svg');
+      expect(getCategoryPlaceholder('sport')).toBe('/placeholders/sport.svg');
+    });
+
+    it('should return generic placeholder for null', () => {
+      expect(getCategoryPlaceholder(null)).toBe(PLACEHOLDER_IMAGE);
+    });
+
+    it('should return generic placeholder for undefined', () => {
+      expect(getCategoryPlaceholder(undefined)).toBe(PLACEHOLDER_IMAGE);
     });
   });
 });

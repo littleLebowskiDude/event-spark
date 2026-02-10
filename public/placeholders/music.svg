@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#581c87" />
+      <stop offset="100%" stop-color="#111827" />
+    </radialGradient>
+  </defs>
+  <rect fill="url(#bg)" width="800" height="600"/>
+  <!-- Music notes -->
+  <g transform="translate(400,280)" fill="none" stroke="#a855f7" stroke-width="5" opacity="0.5">
+    <!-- First note -->
+    <line x1="-60" y1="40" x2="-60" y2="-60"/>
+    <circle cx="-72" cy="40" r="18"/>
+    <!-- Second note -->
+    <line x1="0" y1="20" x2="0" y2="-80"/>
+    <circle cx="-12" cy="20" r="18"/>
+    <!-- Beam connecting them -->
+    <line x1="-60" y1="-60" x2="0" y2="-80"/>
+    <!-- Floating note -->
+    <g transform="translate(60,-30)">
+      <ellipse cx="0" cy="0" rx="14" ry="10" fill="#a855f7" opacity="0.3"/>
+      <line x1="12" y1="0" x2="12" y2="-40"/>
+      <path d="M12,-40 Q28,-45 20,-30 Q14,-20 12,-25" fill="#a855f7" opacity="0.3"/>
+    </g>
+  </g>
+</svg>
