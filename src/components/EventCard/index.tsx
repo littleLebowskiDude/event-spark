@@ -132,6 +132,7 @@ export default function EventCard({
           priority={isTop}
           sizes="(max-width: 768px) 100vw, 500px"
           className="object-cover object-center"
+          category={event.category}
         />
 
         {/* Gradient Overlay */}

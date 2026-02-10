@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1e3a5f" />
+      <stop offset="100%" stop-color="#111827" />
+    </radialGradient>
+  </defs>
+  <rect fill="url(#bg)" width="800" height="600"/>
+  <!-- People group -->
+  <g transform="translate(400,290)" fill="none" stroke="#3b82f6" stroke-width="4.5" stroke-linecap="round" opacity="0.5">
+    <!-- Center person -->
+    <circle cx="0" cy="-50" r="20"/>
+    <path d="M-35,20 Q-35,-15 0,-15 Q35,-15 35,20" fill="#3b82f6" fill-opacity="0.15"/>
+    <!-- Left person -->
+    <circle cx="-65" cy="-40" r="17"/>
+    <path d="M-95,20 Q-95,-8 -65,-8 Q-35,-8 -35,20" fill="#3b82f6" fill-opacity="0.1"/>
+    <!-- Right person -->
+    <circle cx="65" cy="-40" r="17"/>
+    <path d="M35,20 Q35,-8 65,-8 Q95,-8 95,20" fill="#3b82f6" fill-opacity="0.1"/>
+  </g>
+</svg>

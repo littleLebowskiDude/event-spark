@@ -181,6 +181,7 @@ export default function AdminEventsPage() {
                           fill
                           sizes="40px"
                           className="object-cover"
+                          category={event.category}
                         />
                       </div>
                       <div className="min-w-0">

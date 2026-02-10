@@ -69,6 +69,7 @@ export default function SavedEventsList({ events, onEventTap, onRemove }: SavedE
                       fill
                       sizes="80px"
                       className="object-cover"
+                      category={event.category}
                     />
                   </div>
 

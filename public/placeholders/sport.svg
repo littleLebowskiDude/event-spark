@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#7f1d1d" />
+      <stop offset="100%" stop-color="#111827" />
+    </radialGradient>
+  </defs>
+  <rect fill="url(#bg)" width="800" height="600"/>
+  <!-- Trophy -->
+  <g transform="translate(400,290)" fill="none" stroke="#ef4444" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5">
+    <!-- Cup body -->
+    <path d="M-40,-60 L-40,-10 Q-40,35 0,40 Q40,35 40,-10 L40,-60 Z" fill="#ef4444" fill-opacity="0.1"/>
+    <path d="M-40,-60 L-40,-10 Q-40,35 0,40 Q40,35 40,-10 L40,-60 Z"/>
+    <!-- Left handle -->
+    <path d="M-40,-45 Q-65,-45 -65,-20 Q-65,5 -40,5"/>
+    <!-- Right handle -->
+    <path d="M40,-45 Q65,-45 65,-20 Q65,5 40,5"/>
+    <!-- Stem -->
+    <line x1="0" y1="40" x2="0" y2="60"/>
+    <!-- Base -->
+    <line x1="-30" y1="60" x2="30" y2="60"/>
+  </g>
+</svg>
