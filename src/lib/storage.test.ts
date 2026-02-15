@@ -7,6 +7,8 @@ import {
   getDismissedEventIds,
   dismissEventId,
   clearDismissed,
+  getDemoModeOverride,
+  setDemoModeOverride,
 } from './storage';
 
 describe('storage', () => {
@@ -196,6 +198,49 @@ describe('storage', () => {
       clearDismissed();
 
       expect(getDismissedEventIds()).toEqual([]);
+    });
+  });
+
+  describe('getDemoModeOverride', () => {
+    it('should return false when no override is set', () => {
+      expect(getDemoModeOverride()).toBe(false);
+    });
+
+    it('should return true when override is set to "true"', () => {
+      localStorage.setItem('event-spark-demo-mode-override', 'true');
+      expect(getDemoModeOverride()).toBe(true);
+    });
+
+    it('should return false for any value other than "true"', () => {
+      localStorage.setItem('event-spark-demo-mode-override', 'false');
+      expect(getDemoModeOverride()).toBe(false);
+
+      localStorage.setItem('event-spark-demo-mode-override', 'yes');
+      expect(getDemoModeOverride()).toBe(false);
+
+      localStorage.setItem('event-spark-demo-mode-override', '1');
+      expect(getDemoModeOverride()).toBe(false);
+    });
+  });
+
+  describe('setDemoModeOverride', () => {
+    it('should set the override key when enabled', () => {
+      setDemoModeOverride(true);
+      expect(localStorage.getItem('event-spark-demo-mode-override')).toBe('true');
+    });
+
+    it('should remove the override key when disabled', () => {
+      localStorage.setItem('event-spark-demo-mode-override', 'true');
+      setDemoModeOverride(false);
+      expect(localStorage.getItem('event-spark-demo-mode-override')).toBeNull();
+    });
+
+    it('should be readable by getDemoModeOverride after setting', () => {
+      setDemoModeOverride(true);
+      expect(getDemoModeOverride()).toBe(true);
+
+      setDemoModeOverride(false);
+      expect(getDemoModeOverride()).toBe(false);
     });
   });
 
