@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import type { Event, CreateEventInput, UpdateEventInput } from './types';
 import { isE2EDemoMode } from './env';
+import { getDemoModeOverride } from './storage';
 
 // ============================================================================
 // Error Types
@@ -91,6 +92,10 @@ export const supabase = createClient<Database>(
 
 function isSupabaseConfigured(): boolean {
   return Boolean(supabaseUrl && supabaseAnonKey);
+}
+
+function shouldUseDemoMode(): boolean {
+  return isE2EDemoMode() || getDemoModeOverride();
 }
 
 // ============================================================================
@@ -427,7 +432,7 @@ export function checkSupabaseConfig(): { configured: boolean; message?: string }
  */
 export async function getEvents(): Promise<Result<Event[], DatabaseError>> {
   // Use demo storage in E2E demo mode or when Supabase is not configured
-  if (isE2EDemoMode() || !isSupabaseConfigured()) {
+  if (shouldUseDemoMode() || !isSupabaseConfigured()) {
     const now = new Date();
     const events = getDemoEvents()
       .filter((e) => new Date(e.start_date) >= now)
@@ -474,7 +479,7 @@ export async function getEventById(id: string): Promise<Result<Event, DatabaseEr
   }
 
   // Use demo storage in E2E demo mode or when Supabase is not configured
-  if (isE2EDemoMode() || !isSupabaseConfigured()) {
+  if (shouldUseDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents();
     const event = events.find((e) => e.id === id);
     if (!event) {
@@ -530,7 +535,7 @@ export async function getEventsByIds(ids: string[]): Promise<Result<Event[], Dat
   }
 
   // Use demo storage in E2E demo mode or when Supabase is not configured
-  if (isE2EDemoMode() || !isSupabaseConfigured()) {
+  if (shouldUseDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents()
       .filter((e) => ids.includes(e.id))
       .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
@@ -570,7 +575,7 @@ export async function getEventsByIds(ids: string[]): Promise<Result<Event[], Dat
  */
 export async function getAllEvents(): Promise<Result<Event[], DatabaseError>> {
   // Use demo storage in E2E demo mode or when Supabase is not configured
-  if (isE2EDemoMode() || !isSupabaseConfigured()) {
+  if (shouldUseDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents();
     return ok(events.sort((a, b) =>
       new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
@@ -611,7 +616,7 @@ export async function createEvent(
   event: CreateEventInput
 ): Promise<Result<Event, DatabaseError | ValidationError>> {
   // Use demo storage in E2E demo mode or when Supabase is not configured
-  if (isE2EDemoMode() || !isSupabaseConfigured()) {
+  if (shouldUseDemoMode() || !isSupabaseConfigured()) {
     const now = new Date().toISOString();
     const newEvent: Event = {
       id: generateDemoUUID(),
@@ -682,7 +687,7 @@ export async function updateEvent(
   }
 
   // Use demo storage in E2E demo mode or when Supabase is not configured
-  if (isE2EDemoMode() || !isSupabaseConfigured()) {
+  if (shouldUseDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents();
     const index = events.findIndex((e) => e.id === id);
     if (index === -1) {
@@ -742,7 +747,7 @@ export async function deleteEvent(id: string): Promise<Result<boolean, DatabaseE
   }
 
   // Use demo storage in E2E demo mode or when Supabase is not configured
-  if (isE2EDemoMode() || !isSupabaseConfigured()) {
+  if (shouldUseDemoMode() || !isSupabaseConfigured()) {
     const events = getDemoEvents();
     const index = events.findIndex((e) => e.id === id);
     if (index === -1) {

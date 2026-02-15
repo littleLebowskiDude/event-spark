@@ -54,3 +54,23 @@ export function dismissEventId(eventId: string): void {
 export function clearDismissed(): void {
   localStorage.removeItem(DISMISSED_EVENTS_KEY);
 }
+
+// ============================================================================
+// Demo Mode Override
+// ============================================================================
+
+const DEMO_MODE_OVERRIDE_KEY = 'event-spark-demo-mode-override';
+
+export function getDemoModeOverride(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(DEMO_MODE_OVERRIDE_KEY) === 'true';
+}
+
+export function setDemoModeOverride(enabled: boolean): void {
+  if (typeof window === 'undefined') return;
+  if (enabled) {
+    localStorage.setItem(DEMO_MODE_OVERRIDE_KEY, 'true');
+  } else {
+    localStorage.removeItem(DEMO_MODE_OVERRIDE_KEY);
+  }
+}

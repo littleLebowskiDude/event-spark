@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { isSupabaseConfigured, isDevelopment, isE2EDemoMode } from '@/lib/env';
-import { Sparkles, LogOut, List, Plus, Loader2 } from 'lucide-react';
+import { Sparkles, LogOut, List, Plus, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { getDemoModeOverride, setDemoModeOverride } from '@/lib/storage';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +19,11 @@ export default function AdminLayout({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemoSession, setIsDemoSession] = useState(false);
+  const [isDemoOverride, setIsDemoOverride] = useState(false);
+
+  useEffect(() => {
+    setIsDemoOverride(getDemoModeOverride());
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -96,7 +102,15 @@ export default function AdminLayout({
     }
   }, [pathname, router]);
 
+  const handleDemoToggle = () => {
+    const newValue = !isDemoOverride;
+    setDemoModeOverride(newValue);
+    setIsDemoOverride(newValue);
+    window.location.reload();
+  };
+
   const handleLogout = async () => {
+    setDemoModeOverride(false);
     if (isDemoSession) {
       // Clear demo session
       if (typeof window !== 'undefined') {
@@ -158,6 +172,31 @@ export default function AdminLayout({
               </Link>
             ))}
 
+            {isDevelopment() && (
+              isSupabaseConfigured() ? (
+                <button
+                  onClick={handleDemoToggle}
+                  title={isDemoOverride ? 'Switch to live Supabase data' : 'Switch to local demo data'}
+                  className={cn(
+                    'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ml-2',
+                    isDemoOverride
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
+                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                  )}
+                >
+                  {isDemoOverride ? (
+                    <><ToggleRight className="w-3.5 h-3.5" />Demo</>
+                  ) : (
+                    <><ToggleLeft className="w-3.5 h-3.5" />Live</>
+                  )}
+                </button>
+              ) : (
+                <span className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border bg-amber-500/10 border-amber-500/30 text-amber-400 ml-2">
+                  Demo
+                </span>
+              )
+            )}
+
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-sm font-medium text-muted hover:text-red-500 transition-colors ml-4"
@@ -168,6 +207,13 @@ export default function AdminLayout({
           </nav>
         </div>
       </header>
+
+      {/* Demo Mode Status Bar */}
+      {isDemoOverride && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center text-xs text-amber-400">
+          Demo mode — changes are stored locally in your browser
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
